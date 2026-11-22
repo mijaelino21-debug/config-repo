@@ -1,0 +1,82 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 3000
+            logger-level: basic
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+resilience4j:
+  circuitbreaker:
+    circuitBreakerAspectOrder: 1
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+        ignoreExceptions:
+          - feign.FeignException$NotFound
+          - io.github.resilience4j.bulkhead.BulkheadFullException
+    instances:
+      clienteService:
+        baseConfig: default
+      productoService:
+        baseConfig: default
+  retry:
+    retryAspectOrder: 2
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 2s
+        ignoreExceptions:
+          - feign.FeignException$NotFound
+          - io.github.resilience4j.bulkhead.BulkheadFullException
+    instances:
+      clienteRetry:
+        baseConfig: default
+  bulkhead:
+    configs:
+      default:
+        maxConcurrentCalls: 2
+        maxWaitDuration: 1s
+    instances:
+      productoBulkhead:
+        baseConfig: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,refresh,circuitbreakers,circuitbreakerevents,retries,retryevents,bulkheads,bulkheadevents,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+logging:
+  level:
+    com.tecsup.client: DEBUG
+
+mensaje:
+  texto: "Configuracion de pedido-service desde config-repo"
